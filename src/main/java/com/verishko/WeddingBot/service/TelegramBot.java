@@ -1,5 +1,6 @@
 package com.verishko.WeddingBot.service;
 
+import com.vdurmont.emoji.EmojiParser;
 import com.verishko.WeddingBot.config.BotConfig;
 import com.verishko.WeddingBot.model.User;
 import com.verishko.WeddingBot.model.UserRepository;
@@ -121,7 +122,8 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     private void startCommandReceived(long chatId, String name) {
-        String answer = "Hi, " + name + ", nice to meet you!";
+        String answer = EmojiParser.parseToUnicode("Hi, " + name + ", nice to meet you!" + " :blush:");
+//        String answer = "Hi, " + name + ", nice to meet you!";
         log.info("Replied to user " + name);
         sendMessage(chatId, answer);
     }
