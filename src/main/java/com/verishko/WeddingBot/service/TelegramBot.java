@@ -1,16 +1,21 @@
 package com.verishko.WeddingBot.service;
 
 import com.verishko.WeddingBot.config.BotConfig;
+import com.verishko.WeddingBot.model.User;
+import com.verishko.WeddingBot.model.UserRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,6 +23,8 @@ import java.util.List;
 @Slf4j
 public class TelegramBot extends TelegramLongPollingBot {
 
+    @Autowired
+    private UserRepository userRepository;
     private final BotConfig config;
 
     private static final String HELP_TEXT = "This bot was created to celebrate Natasha and Pasha with their Wedding.\n\n" +
@@ -59,6 +66,7 @@ public class TelegramBot extends TelegramLongPollingBot {
 
             switch (messageText) {
                 case "/start":
+                    registerUser(update.getMessage());
                     startCommandReceived(chatId, update.getMessage().getChat().getFirstName());
                     break;
 
@@ -69,6 +77,46 @@ public class TelegramBot extends TelegramLongPollingBot {
                 default:
                     sendMessage(chatId, "Sorry, " + update.getMessage().getChat().getFirstName() + ", command was not recognized :(");
             }
+        }
+    }
+
+    private void registerUser(Message msg) {
+
+        if (userRepository.findById(msg.getChatId()).isEmpty()) {
+
+            var chatId = msg.getChatId();
+            var chat = msg.getChat();
+
+            User user = new User();
+            user.setChatId(chatId);
+            user.setFirstName(chat.getFirstName());
+            user.setLastName(chat.getLastName());
+            user.setUserName(chat.getUserName());
+            user.setRegisteredAt(new Timestamp(System.currentTimeMillis()));
+
+            userRepository.save(user);
+            log.info("User saved: " + user);
+            log.info("Bio: " + chat.getBio());
+            log.info("getDescription: " + chat.getDescription());
+            log.info("getEmojiStatusCustomEmojiId: " + chat.getEmojiStatusCustomEmojiId());
+            log.info("getInviteLink: " + chat.getInviteLink());
+            log.info("getTitle: " + chat.getTitle());
+            log.info("getType: " + chat.getType());
+            log.info("getStickerSetName: " + chat.getStickerSetName());
+            log.info("getCanSetStickerSet: " + chat.getCanSetStickerSet());
+            log.info("getHasPrivateForwards: " + chat.getHasPrivateForwards());
+            log.info("getHasProtectedContent: " + chat.getHasProtectedContent());
+            log.info("getHasRestrictedVoiceAndVideoMessages: " + chat.getHasRestrictedVoiceAndVideoMessages());
+            log.info("getId: " + chat.getId());
+            log.info("getIsForum: " + chat.getIsForum());
+            log.info("getActiveUsernames: " + chat.getActiveUsernames());
+            log.info("getLocation: " + chat.getLocation());
+            log.info("getJoinByRequest: " + chat.getJoinByRequest());
+            log.info("getJoinToSendMessages: " + chat.getJoinToSendMessages());
+            log.info("getPhoto: " + chat.getPhoto());
+            log.info("getLinkedChatId: " + chat.getLinkedChatId());
+            log.info("getPinnedMessage: " + chat.getPinnedMessage());
+            log.info("getSlowModeDelay: " + chat.getSlowModeDelay());
         }
     }
 
